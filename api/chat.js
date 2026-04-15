@@ -5,36 +5,33 @@ export default async function handler(req, res) {
 
   const { messages, system } = req.body;
 
-  // Converte o histórico do formato Anthropic para o formato Gemini
-  const contents = messages.map(function(m) {
-    return {
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    };
-  });
-
   try {
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + process.env.GEMINI_API_KEY,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system }] },
-          contents: contents,
-          generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
-        })
-      }
-    );
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.OPENROUTER_API_KEY,
+        'HTTP-Referer': 'https://akinator-patologias.vercel.app',
+        'X-Title': 'Akinator das Patologias'
+      },
+      body: JSON.stringify({
+        model: 'mistralai/mistral-7b-instruct:free',
+        messages: [
+          { role: 'system', content: system },
+          ...messages
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      })
+    });
 
     const data = await response.json();
 
     if (data.error) {
-      return res.status(500).json({ error: data.error.message });
+      return res.status(500).json({ error: data.error.message || JSON.stringify(data.error) });
     }
 
-    // Converte a resposta do Gemini de volta para o formato que o frontend espera
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.choices?.[0]?.message?.content || '';
     return res.status(200).json({
       content: [{ type: 'text', text: text }]
     });
