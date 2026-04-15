@@ -15,7 +15,7 @@ export default async function handler(req, res) {
         'X-Title': 'Akinator das Patologias'
       },
       body: JSON.stringify({
-        model: 'google/gemma-3-4b-it:free',
+        model: 'microsoft/phi-3-mini-128k-instruct:free',
         messages: [
           { role: 'system', content: system },
           ...messages
