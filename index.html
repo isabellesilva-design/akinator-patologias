@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akinator das Patologias</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Inter:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: rgba(255,255,255,0.08);
+    --border-bright: rgba(255,255,255,0.18);
+    --text: #f0eeea;
+    --muted: #8a8898;
+    --accent: #7c6ff7;
+    --accent-dim: rgba(124,111,247,0.15);
+    --green: #3dd68c;
+    --green-dim: rgba(61,214,140,0.12);
+    --red: #f06292;
+    --red-dim: rgba(240,98,146,0.12);
+    --amber: #ffb74d;
+    --amber-dim: rgba(255,183,77,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  #app { width: 100%; max-width: 480px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .game-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .start-hero { text-align: center; padding: 3rem 0 2rem; }
+
+  .start-icon {
+    font-size: 64px;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .start-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
+  .start-sub {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+  }
+
+  .btn-start {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 40px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: transform .15s, opacity .15s;
+  }
+
+  .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-start:active { transform: scale(0.97); }
+
+  #progress-track {
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  #progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  .q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .q-badge {
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(124,111,247,0.2);
+  }
+
+  .q-counter { font-size: 12px; color: var(--muted); }
+
+  #question-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+  }
+
+  #question-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .thinking { display: flex; align-items: center; gap: 6px; }
+  .thinking span { font-size: 13px; color: var(--muted); }
+
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1.4s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+
+  @keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
+
+  #answer-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .btn-ans {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-ans:hover { border-color: var(--border-bright); background: rgba(255,255,255,0.05); }
+  .btn-ans:active { transform: scale(0.97); }
+
+  .btn-ans.yes { border-color: rgba(61,214,140,0.3); color: var(--green); }
+  .btn-ans.yes:hover { background: var(--green-dim); border-color: var(--green); }
+
+  .btn-ans.no { border-color: rgba(240,98,146,0.3); color: var(--red); }
+  .btn-ans.no:hover { background: var(--red-dim); border-color: var(--red); }
+
+  .btn-ans.maybe {
+    grid-column: 1 / -1;
+    border-color: rgba(255,183,77,0.3);
+    color: var(--amber);
+  }
+  .btn-ans.maybe:hover { background: var(--amber-dim); border-color: var(--amber); }
+
+  #history { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 6px; }
+
+  .hist-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 6px 10px;
+    background: var(--surface);
+    border-radius: 8px;
+    gap: 12px;
+  }
+
+  .hist-q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-a { font-weight: 500; white-space: nowrap; }
+  .hist-a.sim { color: var(--green); }
+  .hist-a.nao { color: var(--red); }
+  .hist-a.talvez { color: var(--amber); }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .result-label {
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 1rem;
+  }
+
+  .result-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .result-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .result-emoji { font-size: 48px; margin-bottom: 1rem; display: block; }
+
+  .btn-retry {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .btn-retry:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+
+  #error-msg {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 10px;
+    min-height: 18px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="game-header">
+    <div class="logo-icon">🩺</div>
+    <div class="logo-text">Akinator das Patologias</div>
+  </div>
+
+  <div id="start-screen" class="screen active">
+    <div class="start-hero">
+      <span class="start-icon">🧬</span>
+      <h1 class="start-title">Eu adivinho qualquer doença</h1>
+      <p class="start-sub">Pense em uma patologia, síndrome ou condição médica.<br>Vou fazer perguntas e tentar descobrir qual é.</p>
+      <button class="btn-start" onclick="startGame()">Começar o jogo</button>
+    </div>
+  </div>
+
+  <div id="game-screen" class="screen">
+    <div id="progress-track"><div id="progress-fill"></div></div>
+    <div class="q-meta">
+      <span class="q-badge">perguntando</span>
+      <span class="q-counter" id="counter">pergunta 1</span>
+    </div>
+    <div id="question-box">
+      <div id="question-text">
+        <div class="thinking">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <span>pensando...</span>
+        </div>
+      </div>
+    </div>
+    <div id="answer-btns" style="display:none">
+      <button class="btn-ans yes" onclick="answer('Sim')">Sim</button>
+      <button class="btn-ans no" onclick="answer('Não')">Não</button>
+      <button class="btn-ans maybe" onclick="answer('Às vezes / não sei')">Às vezes / não sei</button>
+    </div>
+    <div id="error-msg"></div>
+    <div id="history"></div>
+  </div>
+
+  <div id="result-screen" class="screen">
+    <div class="result-card">
+      <span class="result-emoji">🎯</span>
+      <div class="result-label">Meu palpite é...</div>
+      <div class="result-name" id="result-name"></div>
+      <div class="result-desc" id="result-desc"></div>
+    </div>
+    <button class="btn-retry" onclick="startGame()">Jogar novamente</button>
+  </div>
+
+</div>
+<script>
+var SYSTEM = `Você é um médico diagnosticador jogando um jogo estilo Akinator. O jogador está pensando em uma patologia, doença, síndrome ou condição médica (clínica geral, qualquer tipo).
+
+Faça perguntas de sim/não em português brasileiro acessíveis ao público geral. Use as respostas para afunilar o diagnóstico.
+
+REGRA CRÍTICA: Responda SOMENTE com JSON puro. Zero texto fora do JSON. Zero markdown. Zero explicações.
+
+Formato para perguntas:
+{"tipo":"pergunta","texto":"Sua pergunta aqui?"}
+
+Formato para palpite (quando tiver confiança ou após muitas perguntas):
+{"tipo":"palpite","diagnostico":"Nome da Doença","descricao":"Uma ou duas frases simples explicando a doença para leigos."}`;
+
+var msgs = [];
+var qCount = 0;
+var MAX_Q = 18;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function setThinking(on) {
+  document.getElementById('answer-btns').style.display = on ? 'none' : 'grid';
+  if (on) {
+    document.getElementById('question-text').innerHTML =
+      '<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>pensando...</span></div>';
+  }
+  document.getElementById('error-msg').textContent = '';
+}
+
+function startGame() {
+  msgs = [];
+  qCount = 0;
+  document.getElementById('history').innerHTML = '';
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('error-msg').textContent = '';
+  showScreen('game-screen');
+  setThinking(true);
+  callAPI([{ role: 'user', content: 'Inicie o jogo. Faça a primeira pergunta.' }]);
+}
+
+function answer(resp) {
+  var q = document.getElementById('question-text').textContent.trim();
+  addHistory(q, resp);
+  msgs.push({ role: 'user', content: resp });
+  setThinking(true);
+  var extra = qCount >= MAX_Q ? ' Já foram muitas perguntas — faça seu palpite agora.' : '';
+  var toSend = msgs.concat(extra ? [{ role: 'user', content: extra }] : []);
+  callAPI(toSend);
+}
+
+function addHistory(q, a) {
+  var el = document.createElement('div');
+  el.className = 'hist-row';
+  var short = q.length > 55 ? q.slice(0,53)+'…' : q;
+  var cls = a === 'Sim' ? 'sim' : (a === 'Não' ? 'nao' : 'talvez');
+  el.innerHTML = '<span class="hist-q">'+short+'</span><span class="hist-a '+cls+'">'+a+'</span>';
+  document.getElementById('history').appendChild(el);
+}
+
+function callAPI(messages) {
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: messages, system: SYSTEM })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.error) { showErr('Erro: ' + (data.error.message || data.error)); return; }
+    var raw = data.content && data.content[0] ? data.content[0].text.trim() : '';
+    handleRaw(raw, messages);
+  })
+  .catch(function(e){ showErr('Erro de conexão: ' + e.message); });
+}
+
+function handleRaw(raw, prevMsgs) {
+  var parsed = null;
+  var clean = raw.replace(/```json|```/g,'').trim();
+  var m = clean.match(/\{[\s\S]*\}/);
+  if (m) { try { parsed = JSON.parse(m[0]); } catch(e){} }
+  if (!parsed) { showErr('Resposta inesperada. Tente novamente.'); return; }
+
+  msgs = prevMsgs.concat([{ role: 'assistant', content: raw }]);
+
+  if (parsed.tipo === 'palpite') {
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('result-name').textContent = parsed.diagnostico || '?';
+    document.getElementById('result-desc').textContent = parsed.descricao || '';
+    showScreen('result-screen');
+  } else {
+    qCount++;
+    var pct = Math.min(Math.round((qCount / MAX_Q) * 100), 90);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('counter').textContent = 'pergunta ' + qCount;
+    document.getElementById('question-text').textContent = parsed.texto || clean;
+    setThinking(false);
+  }
+}
+
+function showErr(msg) {
+  setThinking(false);
+  document.getElementById('error-msg').textContent = msg;
+}
+</script>
+</body>
+</html>
