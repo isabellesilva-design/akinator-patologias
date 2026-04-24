@@ -3,377 +3,707 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Akinator das Patologias</title>
+<title>O Códex — Akinator das Patologias</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Inter:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500&display=swap');
 
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --border: rgba(255,255,255,0.08);
-    --border-bright: rgba(255,255,255,0.18);
-    --text: #f0eeea;
-    --muted: #8a8898;
-    --accent: #7c6ff7;
-    --accent-dim: rgba(124,111,247,0.15);
-    --green: #3dd68c;
-    --green-dim: rgba(61,214,140,0.12);
-    --red: #f06292;
-    --red-dim: rgba(240,98,146,0.12);
-    --amber: #ffb74d;
-    --amber-dim: rgba(255,183,77,0.12);
-  }
+:root {
+  --bg: #05030f;
+  --surface: #0d0820;
+  --card: #110d25;
+  --cyan: #00f5ff;
+  --purple: #b44fff;
+  --gold: #ffd566;
+  --pink: #ff4fa3;
+  --text: #e8e0ff;
+  --muted: #7a6fa8;
+  --border: rgba(180,79,255,0.2);
+  --border-bright: rgba(0,245,255,0.3);
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+  overflow-x: hidden;
+}
 
-  #app { width: 100%; max-width: 480px; }
+/* Particles bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(180,79,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 80%, rgba(0,245,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-  .screen { display: none; }
-  .screen.active { display: block; }
+#app {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+}
 
-  .game-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 2rem;
-  }
+.screen { display: none; }
+.screen.active { display: block; }
 
-  .logo-icon {
-    width: 40px; height: 40px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
+/* ── BOOK CHARACTER ── */
+#book-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
 
-  .logo-text {
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
+#book-svg {
+  width: 140px;
+  height: 140px;
+  filter: drop-shadow(0 0 18px rgba(180,79,255,0.5)) drop-shadow(0 0 40px rgba(0,245,255,0.2));
+}
 
-  .start-hero { text-align: center; padding: 3rem 0 2rem; }
+@keyframes float {
+  0%,100% { transform: translateY(0px) rotate(-1deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+@keyframes pulse-glow {
+  0%,100% { filter: drop-shadow(0 0 18px rgba(180,79,255,0.5)) drop-shadow(0 0 40px rgba(0,245,255,0.2)); }
+  50% { filter: drop-shadow(0 0 28px rgba(180,79,255,0.8)) drop-shadow(0 0 60px rgba(0,245,255,0.35)); }
+}
+@keyframes eye-blink {
+  0%,90%,100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+@keyframes think-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
-  .start-icon {
-    font-size: 64px;
-    margin-bottom: 1.5rem;
-    display: block;
-  }
+#book-svg { animation: float 4s ease-in-out infinite, pulse-glow 4s ease-in-out infinite; }
+#book-eye { animation: eye-blink 5s ease-in-out infinite; transform-origin: 70px 68px; }
+#think-ring { display: none; transform-origin: 70px 70px; }
+#think-ring.active { display: block; animation: think-spin 1.2s linear infinite; }
 
-  .start-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 0.75rem;
-    color: var(--text);
-  }
+/* Speech bubble */
+#speech {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-top: 12px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .start-sub {
-    font-size: 15px;
-    color: var(--muted);
-    line-height: 1.6;
-    margin-bottom: 2.5rem;
-  }
+#speech::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px; height: 8px;
+  background: var(--card);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
 
-  .btn-start {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Syne', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    padding: 14px 40px;
-    cursor: pointer;
-    letter-spacing: 0.03em;
-    transition: transform .15s, opacity .15s;
-  }
+#speech-text {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--cyan);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
 
-  .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-start:active { transform: scale(0.97); }
+/* ── TITLE ── */
+.game-title {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
 
-  #progress-track {
-    height: 2px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-bottom: 2rem;
-    overflow: hidden;
-  }
+.title-top {
+  font-size: 11px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
 
-  #progress-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width .6s cubic-bezier(.4,0,.2,1);
-    width: 0%;
-  }
+.title-main {
+  font-family: 'Cinzel', serif;
+  font-size: 30px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 60%, var(--pink) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
 
-  .q-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-  }
+.title-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.6;
+}
 
-  .q-badge {
-    font-size: 11px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-dim);
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid rgba(124,111,247,0.2);
-  }
+/* ── PROGRESS ── */
+#progress-track {
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
 
-  .q-counter { font-size: 12px; color: var(--muted); }
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--cyan));
+  border-radius: 2px;
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+  box-shadow: 0 0 8px var(--cyan);
+}
 
-  #question-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    min-height: 100px;
-    display: flex;
-    align-items: center;
-  }
+.q-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
 
-  #question-text {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--text);
-  }
+.q-badge {
+  font-size: 10px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: rgba(0,245,255,0.08);
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,245,255,0.2);
+}
 
-  .thinking { display: flex; align-items: center; gap: 6px; }
-  .thinking span { font-size: 13px; color: var(--muted); }
+.q-counter { font-size: 12px; color: var(--muted); font-family: 'Cinzel', serif; }
 
-  .dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: blink 1.4s infinite;
-  }
-  .dot:nth-child(2) { animation-delay: .2s; }
-  .dot:nth-child(3) { animation-delay: .4s; }
+/* ── QUESTION BOX ── */
+#question-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
 
-  @keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
+#question-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(180,79,255,0.04) 0%, rgba(0,245,255,0.04) 100%);
+  pointer-events: none;
+}
 
-  #answer-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+#question-text {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+}
 
-  .btn-ans {
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 14px;
-    cursor: pointer;
-    transition: all .15s;
-    letter-spacing: 0.02em;
-  }
+.thinking { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.thinking span { font-size: 12px; color: var(--muted); font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 
-  .btn-ans:hover { border-color: var(--border-bright); background: rgba(255,255,255,0.05); }
-  .btn-ans:active { transform: scale(0.97); }
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--purple);
+  animation: blink 1.4s infinite;
+  box-shadow: 0 0 6px var(--purple);
+}
+.dot:nth-child(2) { animation-delay: .2s; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.dot:nth-child(3) { animation-delay: .4s; background: var(--pink); box-shadow: 0 0 6px var(--pink); }
 
-  .btn-ans.yes { border-color: rgba(61,214,140,0.3); color: var(--green); }
-  .btn-ans.yes:hover { background: var(--green-dim); border-color: var(--green); }
+@keyframes blink { 0%,100%{opacity:.15} 50%{opacity:1} }
 
-  .btn-ans.no { border-color: rgba(240,98,146,0.3); color: var(--red); }
-  .btn-ans.no:hover { background: var(--red-dim); border-color: var(--red); }
+/* ── ANSWER BUTTONS ── */
+#answer-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 0.5rem;
+}
 
-  .btn-ans.maybe {
-    grid-column: 1 / -1;
-    border-color: rgba(255,183,77,0.3);
-    color: var(--amber);
-  }
-  .btn-ans.maybe:hover { background: var(--amber-dim); border-color: var(--amber); }
+.btn-ans {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: 0.04em;
+  position: relative;
+  overflow: hidden;
+}
 
-  #history { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 6px; }
+.btn-ans::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .2s;
+}
 
-  .hist-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: var(--muted);
-    padding: 6px 10px;
-    background: var(--surface);
-    border-radius: 8px;
-    gap: 12px;
-  }
+.btn-ans.yes { border-color: rgba(0,245,255,0.3); color: var(--cyan); }
+.btn-ans.yes::after { background: rgba(0,245,255,0.06); }
+.btn-ans.yes:hover { border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,245,255,0.2); }
+.btn-ans.yes:hover::after { opacity: 1; }
 
-  .hist-q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .hist-a { font-weight: 500; white-space: nowrap; }
-  .hist-a.sim { color: var(--green); }
-  .hist-a.nao { color: var(--red); }
-  .hist-a.talvez { color: var(--amber); }
+.btn-ans.no { border-color: rgba(255,79,163,0.3); color: var(--pink); }
+.btn-ans.no::after { background: rgba(255,79,163,0.06); }
+.btn-ans.no:hover { border-color: var(--pink); box-shadow: 0 0 16px rgba(255,79,163,0.2); }
+.btn-ans.no:hover::after { opacity: 1; }
 
-  .result-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2rem;
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
+.btn-ans.maybe {
+  grid-column: 1 / -1;
+  border-color: rgba(255,213,102,0.3);
+  color: var(--gold);
+}
+.btn-ans.maybe::after { background: rgba(255,213,102,0.05); }
+.btn-ans.maybe:hover { border-color: var(--gold); box-shadow: 0 0 16px rgba(255,213,102,0.2); }
+.btn-ans.maybe:hover::after { opacity: 1; }
 
-  .result-label {
-    font-size: 11px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--green);
-    margin-bottom: 1rem;
-  }
+.btn-ans:active { transform: scale(0.97); }
 
-  .result-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 0.75rem;
-    line-height: 1.2;
-  }
+/* ── HISTORY ── */
+#history { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 5px; }
 
-  .result-desc {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
+.hist-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.04);
+  gap: 12px;
+}
 
-  .result-emoji { font-size: 48px; margin-bottom: 1rem; display: block; }
+.hist-q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-a { font-weight: 500; white-space: nowrap; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.05em; }
+.hist-a.sim { color: var(--cyan); }
+.hist-a.nao { color: var(--pink); }
+.hist-a.talvez { color: var(--gold); }
 
-  .btn-retry {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--border-bright);
-    color: var(--text);
-    border-radius: 12px;
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 14px;
-    cursor: pointer;
-    transition: all .15s;
-  }
+/* ── RESULT SCREEN ── */
+.result-card {
+  background: var(--card);
+  border: 1px solid rgba(180,79,255,0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
 
-  .btn-retry:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+.result-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(180,79,255,0.06) 0%, rgba(0,245,255,0.04) 100%);
+  pointer-events: none;
+}
 
-  #error-msg {
-    font-size: 12px;
-    color: var(--red);
-    margin-top: 10px;
-    min-height: 18px;
-    text-align: center;
-  }
+.result-label {
+  font-size: 10px;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.result-name {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+  position: relative;
+}
+
+.result-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.result-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 1rem; }
+
+.btn-correct {
+  width: 100%;
+  background: rgba(0,245,255,0.08);
+  border: 1px solid rgba(0,245,255,0.35);
+  color: var(--cyan);
+  border-radius: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: 0.06em;
+}
+.btn-correct:hover { background: rgba(0,245,255,0.14); box-shadow: 0 0 20px rgba(0,245,255,0.2); }
+
+.btn-wrong {
+  width: 100%;
+  background: rgba(255,79,163,0.08);
+  border: 1px solid rgba(255,79,163,0.35);
+  color: var(--pink);
+  border-radius: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: 0.06em;
+}
+.btn-wrong:hover { background: rgba(255,79,163,0.14); box-shadow: 0 0 20px rgba(255,79,163,0.2); }
+
+.btn-retry {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+  border-radius: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: 0.05em;
+}
+.btn-retry:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+/* ── WIN SCREEN ── */
+#win-screen { text-align: center; padding: 1rem 0; }
+
+.win-rune {
+  font-size: 56px;
+  margin-bottom: 1rem;
+  display: block;
+  filter: drop-shadow(0 0 20px var(--gold));
+  animation: float 3s ease-in-out infinite;
+}
+
+.win-title {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(255,213,102,0.5);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.win-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+  font-family: 'Cinzel', serif;
+}
+
+.btn-play-again {
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  color: var(--bg);
+  border: none;
+  border-radius: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 40px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: opacity .15s, transform .15s;
+  box-shadow: 0 4px 24px rgba(180,79,255,0.4);
+}
+.btn-play-again:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-play-again:active { transform: scale(0.97); }
+
+/* ── START BTN ── */
+.btn-start-main {
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  color: var(--bg);
+  border: none;
+  border-radius: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 40px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: opacity .15s, transform .15s;
+  box-shadow: 0 4px 24px rgba(180,79,255,0.4);
+}
+.btn-start-main:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-start-main:active { transform: scale(0.97); }
+
+#error-msg {
+  font-size: 12px;
+  color: var(--pink);
+  margin-top: 10px;
+  min-height: 18px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <div class="game-header">
-    <div class="logo-icon">🩺</div>
-    <div class="logo-text">Akinator das Patologias</div>
-  </div>
-
-  <div id="start-screen" class="screen active">
-    <div class="start-hero">
-      <span class="start-icon">🧬</span>
-      <h1 class="start-title">Eu adivinho qualquer doença</h1>
-      <p class="start-sub">Pense em uma patologia, síndrome ou condição médica.<br>Vou fazer perguntas e tentar descobrir qual é.</p>
-      <button class="btn-start" onclick="startGame()">Começar o jogo</button>
+  <!-- BOOK CHARACTER (shown on all screens) -->
+  <div id="book-wrap">
+    <svg id="book-svg" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+      <!-- Glow halo -->
+      <ellipse cx="70" cy="125" rx="38" ry="6" fill="rgba(180,79,255,0.18)"/>
+      <!-- Book body shadow -->
+      <rect x="22" y="28" width="96" height="88" rx="10" fill="rgba(0,0,0,0.4)"/>
+      <!-- Book body -->
+      <rect x="20" y="24" width="96" height="88" rx="10" fill="#1a0a3a"/>
+      <!-- Spine line -->
+      <rect x="64" y="24" width="6" height="88" fill="#0f0620"/>
+      <!-- Cover shimmer left -->
+      <rect x="20" y="24" width="44" height="88" rx="10" fill="url(#coverL)"/>
+      <!-- Cover shimmer right -->
+      <rect x="70" y="24" width="46" height="88" rx="10" fill="url(#coverR)"/>
+      <!-- Neon border -->
+      <rect x="20" y="24" width="96" height="88" rx="10" fill="none" stroke="url(#neonBorder)" stroke-width="1.5"/>
+      <!-- Rune lines top -->
+      <line x1="30" y1="38" x2="58" y2="38" stroke="rgba(0,245,255,0.3)" stroke-width="1" stroke-dasharray="3 2"/>
+      <line x1="30" y1="44" x2="52" y2="44" stroke="rgba(180,79,255,0.25)" stroke-width="1" stroke-dasharray="2 3"/>
+      <!-- Rune lines bottom -->
+      <line x1="30" y1="95" x2="58" y2="95" stroke="rgba(0,245,255,0.3)" stroke-width="1" stroke-dasharray="3 2"/>
+      <line x1="30" y1="101" x2="50" y2="101" stroke="rgba(180,79,255,0.25)" stroke-width="1" stroke-dasharray="2 3"/>
+      <!-- Eye socket -->
+      <ellipse cx="70" cy="68" rx="20" ry="14" fill="#0a0520"/>
+      <ellipse cx="70" cy="68" rx="20" ry="14" fill="none" stroke="url(#eyeGlow)" stroke-width="1.2"/>
+      <!-- Eye iris -->
+      <g id="book-eye">
+        <ellipse cx="70" cy="68" rx="12" ry="9" fill="url(#irisGrad)"/>
+        <ellipse cx="70" cy="68" rx="6" ry="6" fill="#05020f"/>
+        <ellipse cx="70" cy="68" rx="6" ry="6" fill="none" stroke="var(--cyan)" stroke-width="0.5" opacity="0.6"/>
+        <!-- Pupil glow -->
+        <ellipse cx="70" cy="68" rx="3" ry="3" fill="var(--cyan)" opacity="0.9"/>
+        <ellipse cx="72" cy="66" rx="1.2" ry="1.2" fill="white" opacity="0.8"/>
+      </g>
+      <!-- Thinking ring (shown while loading) -->
+      <g id="think-ring">
+        <circle cx="70" cy="70" r="32" fill="none" stroke="url(#ringGrad)" stroke-width="2" stroke-dasharray="12 8" stroke-linecap="round"/>
+      </g>
+      <!-- Sparkles -->
+      <circle cx="26" cy="30" r="1.5" fill="var(--cyan)" opacity="0.7"/>
+      <circle cx="114" cy="26" r="1" fill="var(--purple)" opacity="0.8"/>
+      <circle cx="118" cy="105" r="1.5" fill="var(--cyan)" opacity="0.6"/>
+      <circle cx="24" cy="108" r="1" fill="var(--pink)" opacity="0.7"/>
+      <defs>
+        <linearGradient id="coverL" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="rgba(180,79,255,0.12)"/>
+          <stop offset="100%" stop-color="rgba(0,245,255,0.05)"/>
+        </linearGradient>
+        <linearGradient id="coverR" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="rgba(0,245,255,0.07)"/>
+          <stop offset="100%" stop-color="rgba(180,79,255,0.1)"/>
+        </linearGradient>
+        <linearGradient id="neonBorder" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--purple)" stop-opacity="0.8"/>
+          <stop offset="50%" stop-color="var(--cyan)" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="var(--pink)" stop-opacity="0.7"/>
+        </linearGradient>
+        <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="var(--purple)"/>
+          <stop offset="60%" stop-color="#3a0080"/>
+          <stop offset="100%" stop-color="#1a0040"/>
+        </radialGradient>
+        <linearGradient id="eyeGlow" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--cyan)" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="var(--purple)" stop-opacity="0.6"/>
+        </linearGradient>
+        <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--cyan)"/>
+          <stop offset="100%" stop-color="var(--purple)"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div id="speech">
+      <span id="speech-text">Eu sou o Códex. Nada escapa ao meu olhar.</span>
     </div>
   </div>
 
+  <!-- START -->
+  <div id="start-screen" class="screen active">
+    <div class="game-title">
+      <div class="title-top">O Oráculo das Doenças</div>
+      <div class="title-main">O Códex</div>
+      <div class="title-sub">Pense em uma patologia, síndrome ou condição médica.<br>Meu olho ancião irá decifrá-la.</div>
+    </div>
+    <div style="text-align:center">
+      <button class="btn-start-main" onclick="startGame()">Invocar o Códex</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
   <div id="game-screen" class="screen">
     <div id="progress-track"><div id="progress-fill"></div></div>
     <div class="q-meta">
-      <span class="q-badge">perguntando</span>
-      <span class="q-counter" id="counter">pergunta 1</span>
+      <span class="q-badge">Revelando</span>
+      <span class="q-counter" id="counter">Pergunta 1</span>
     </div>
     <div id="question-box">
       <div id="question-text">
         <div class="thinking">
           <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-          <span>pensando...</span>
+          <span>Consultando os registros...</span>
         </div>
       </div>
     </div>
     <div id="answer-btns" style="display:none">
       <button class="btn-ans yes" onclick="answer('Sim')">Sim</button>
       <button class="btn-ans no" onclick="answer('Não')">Não</button>
-      <button class="btn-ans maybe" onclick="answer('Às vezes / não sei')">Às vezes / não sei</button>
+      <button class="btn-ans maybe" onclick="answer('Às vezes / Não sei')">Às vezes / Não sei</button>
     </div>
     <div id="error-msg"></div>
     <div id="history"></div>
   </div>
 
+  <!-- RESULT -->
   <div id="result-screen" class="screen">
     <div class="result-card">
-      <span class="result-emoji">🎯</span>
-      <div class="result-label">Meu palpite é...</div>
+      <div class="result-label" id="result-label">O Códex pronuncia...</div>
       <div class="result-name" id="result-name"></div>
       <div class="result-desc" id="result-desc"></div>
     </div>
-    <button class="btn-retry" onclick="startGame()">Jogar novamente</button>
+    <div class="result-actions">
+      <button class="btn-correct" onclick="onCorrect()">O Códex acertou!</button>
+      <button class="btn-wrong" onclick="onWrong()">O Códex errou — que continue buscando</button>
+      <button class="btn-retry" onclick="startGame()">Encerrar e jogar novamente</button>
+    </div>
+  </div>
+
+  <!-- WIN -->
+  <div id="win-screen" class="screen" style="text-align:center;padding:1rem 0">
+    <span class="win-rune">✦</span>
+    <div class="win-title">O Códex prevalece!</div>
+    <div class="win-sub" id="win-sub"></div>
+    <button class="btn-play-again" onclick="startGame()">Desafiar novamente</button>
   </div>
 
 </div>
+
 <script>
-var SYSTEM = `Você é um médico diagnosticador jogando um jogo estilo Akinator. O jogador está pensando em uma patologia, doença, síndrome ou condição médica (clínica geral, qualquer tipo).
+var SYSTEM = `Você é o Códex — um livro mágico oracular que joga um jogo estilo Akinator. O jogador está pensando em uma patologia, doença, síndrome ou condição médica (clínica geral, qualquer tipo, incluindo doenças raras).
 
-Faça perguntas de sim/não em português brasileiro acessíveis ao público geral. Use as respostas para afunilar o diagnóstico.
+MÉTODO DE INVESTIGAÇÃO OBRIGATÓRIO:
+Antes de cada pergunta, raciocine internamente: quais hipóteses ainda estão abertas? Qual categoria ainda não explorei?
+Siga esta sequência de fases:
+- Fase 1 (perguntas 1-4): identifique o sistema do corpo afetado (respiratório, cardiovascular, digestivo, neurológico, pele, imune, endócrino, infeccioso, etc.)
+- Fase 2 (perguntas 5-8): identifique os sintomas principais (dor, febre, inchaço, fraqueza, manchas, tosse, etc.)
+- Fase 3 (perguntas 9-13): características da doença (crônica ou aguda, contagiosa, hereditária, autoimune, agente externo)
+- Fase 4 (perguntas 14+): detalhes finos para distinguir as hipóteses restantes
+Sempre escolha a pergunta que elimina o maior número de hipóteses de uma vez.
 
-REGRA CRÍTICA: Responda SOMENTE com JSON puro. Zero texto fora do JSON. Zero markdown. Zero explicações.
+REGRA DE PALPITE — CRÍTICA:
+- Só palpite quando restar UMA única hipótese com mais de 90% de certeza.
+- Se ainda houver 2 ou mais hipóteses possíveis, continue perguntando.
+- NUNCA palpite antes da pergunta 8, mesmo que pareça óbvio.
+- Prefira errar por excesso de perguntas do que por pressa.
+
+OUTRAS REGRAS:
+1. Responda SOMENTE com JSON puro. Zero texto fora do JSON. Zero markdown. Zero explicações.
+2. Uma pergunta por vez. Perguntas curtas e acessíveis ao público geral em português brasileiro.
+3. Se o jogador disser que errou, continue investigando sem repetir diagnósticos já tentados.
 
 Formato para perguntas:
-{"tipo":"pergunta","texto":"Sua pergunta aqui?"}
+{"tipo":"pergunta","texto":"Sua pergunta aqui?","fala":"Frase curta e solene do Códex (máx 10 palavras, estilo oráculo)"}
 
-Formato para palpite (quando tiver confiança ou após muitas perguntas):
-{"tipo":"palpite","diagnostico":"Nome da Doença","descricao":"Uma ou duas frases simples explicando a doença para leigos."}`;
+Formato para palpite (somente com 90%+ de certeza e nunca antes da pergunta 8):
+{"tipo":"palpite","diagnostico":"Nome Exato da Doença","descricao":"Uma ou duas frases simples para leigos.","fala":"Frase dramática e solene ao pronunciar o palpite (máx 12 palavras)"}`;
 
 var msgs = [];
 var qCount = 0;
-var MAX_Q = 18;
+var MAX_Q = 25;
+var wrongGuesses = [];
+
+var speechLines = [
+  'Os registros antigos falam...',
+  'Meu olho vê além do véu...',
+  'Os padrões se revelam...',
+  'Cada resposta ilumina o caminho...',
+  'A verdade se aproxima...',
+  'Folheio os segredos do corpo...',
+  'As peças se encaixam...',
+  'Minha visão afunila...',
+];
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
 }
 
+function setSpeech(text) {
+  document.getElementById('speech-text').textContent = text;
+}
+
 function setThinking(on) {
   document.getElementById('answer-btns').style.display = on ? 'none' : 'grid';
+  document.getElementById('think-ring').classList.toggle('active', on);
   if (on) {
     document.getElementById('question-text').innerHTML =
-      '<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>pensando...</span></div>';
+      '<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Consultando os registros...</span></div>';
+    setSpeech('Consultando os registros ancestrais...');
   }
   document.getElementById('error-msg').textContent = '';
 }
@@ -381,9 +711,11 @@ function setThinking(on) {
 function startGame() {
   msgs = [];
   qCount = 0;
+  wrongGuesses = [];
   document.getElementById('history').innerHTML = '';
   document.getElementById('progress-fill').style.width = '0%';
   document.getElementById('error-msg').textContent = '';
+  setSpeech('Eu sou o Códex. Nada escapa ao meu olhar.');
   showScreen('game-screen');
   setThinking(true);
   callAPI([{ role: 'user', content: 'Inicie o jogo. Faça a primeira pergunta.' }]);
@@ -394,9 +726,30 @@ function answer(resp) {
   addHistory(q, resp);
   msgs.push({ role: 'user', content: resp });
   setThinking(true);
-  var extra = qCount >= MAX_Q ? ' Já foram muitas perguntas — faça seu palpite agora.' : '';
-  var toSend = msgs.concat(extra ? [{ role: 'user', content: extra }] : []);
+  var toSend = msgs.slice();
+  if (qCount >= MAX_Q) {
+    toSend.push({ role: 'user', content: 'Já investigamos muito. Pronuncie seu palpite final agora.' });
+  }
   callAPI(toSend);
+}
+
+function onCorrect() {
+  var name = document.getElementById('result-name').textContent;
+  document.getElementById('win-sub').textContent =
+    'O Códex decifrou "' + name + '" em ' + qCount + ' pergunta' + (qCount === 1 ? '' : 's') + '. O conhecimento ancestral prevalece.';
+  setSpeech('Meu olho ancião nunca falha.');
+  showScreen('win-screen');
+}
+
+function onWrong() {
+  var wrongName = document.getElementById('result-name').textContent;
+  wrongGuesses.push(wrongName);
+  var avoid = wrongGuesses.map(function(n){ return '"' + n + '"'; }).join(', ');
+  msgs.push({ role: 'user', content: 'Incorreto. Não é ' + wrongName + '. Continue investigando. Não repita: ' + avoid + '.' });
+  setSpeech('O Códex busca mais fundo...');
+  showScreen('game-screen');
+  setThinking(true);
+  callAPI(msgs);
 }
 
 function addHistory(q, a) {
@@ -426,23 +779,29 @@ function callAPI(messages) {
 function handleRaw(raw, prevMsgs) {
   var parsed = null;
   var clean = raw.replace(/```json|```/g,'').trim();
-  var m = clean.match(/\{[\s\S]*\}/);
+  var m = clean.match(/\{[\s\S]*?\}/);
   if (m) { try { parsed = JSON.parse(m[0]); } catch(e){} }
-  if (!parsed) { showErr('Resposta inesperada. Tente novamente.'); return; }
+  if (!parsed) { showErr('O Códex perdeu o fio. Tente novamente.'); return; }
 
   msgs = prevMsgs.concat([{ role: 'assistant', content: raw }]);
 
+  if (parsed.fala) { setSpeech(parsed.fala); }
+
   if (parsed.tipo === 'palpite') {
-    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('progress-fill').style.width = '90%';
+    document.getElementById('result-label').textContent = wrongGuesses.length > 0 ? 'O Códex tenta novamente...' : 'O Códex pronuncia...';
     document.getElementById('result-name').textContent = parsed.diagnostico || '?';
     document.getElementById('result-desc').textContent = parsed.descricao || '';
     showScreen('result-screen');
   } else {
     qCount++;
-    var pct = Math.min(Math.round((qCount / MAX_Q) * 100), 90);
+    var pct = Math.min(Math.round((qCount / MAX_Q) * 100), 85);
     document.getElementById('progress-fill').style.width = pct + '%';
-    document.getElementById('counter').textContent = 'pergunta ' + qCount;
+    document.getElementById('counter').textContent = 'Pergunta ' + qCount;
     document.getElementById('question-text').textContent = parsed.texto || clean;
+    if (!parsed.fala && speechLines[qCount - 1]) {
+      setSpeech(speechLines[qCount - 1]);
+    }
     setThinking(false);
   }
 }
